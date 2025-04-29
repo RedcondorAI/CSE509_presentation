@@ -1,0 +1,106 @@
+---
+title: "EAS 509 Presentation"
+author: "Dulanjala Anuradha"
+date: "2025-04-29"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+https://archive.ics.uci.edu/dataset/296/diabetes+130-us+hospitals+for+years+1999-2008
+
+```{r}
+# Load required packages
+library(arules)
+library(tidyverse)
+library(readr)
+
+# Step 1: Load data
+diabetic_data <- read_csv("diabetic_data.csv")
+ids_mapping <- read_csv("IDS_mapping.csv")
+```
+
+```{r}
+# Check structure and sample of IDS_mapping
+glimpse(ids_mapping)
+head(ids_mapping)
+colnames(ids_mapping)
+
+```
+```{r}
+colnames(ids_mapping) <- trimws(colnames(ids_mapping))
+
+```
+
+```{r}
+# Step 2: Apply mapping from IDS_mapping to diabetic_data
+# Convert ids_mapping into a list of lookup tables by variable
+mapping_list <- split(ids_mapping, ids_mapping$variable)
+```
+
+```{r}
+# Replace coded columns with descriptions
+for (var in names(mapping_list)) {
+  map_df <- mapping_list[[var]]
+  if (var %in% colnames(diabetic_data)) {
+    code_to_desc <- setNames(map_df$description, map_df$code)
+    diabetic_data[[var]] <- as.character(diabetic_data[[var]])
+    diabetic_data[[var]] <- code_to_desc[diabetic_data[[var]]]
+  }
+}
+```
+
+```{r}
+# Step 3: Select relevant categorical variables for transaction analysis
+# Feel free to add/remove variables
+vars_for_arules <- c("age", "gender", "race", "readmitted",
+                     "admission_type_id", "discharge_disposition_id",
+                     "admission_source_id", 
+                     "metformin", "glipizide", "insulin", "glyburide")
+
+# Subset the data and convert to factor
+trans_data <- diabetic_data %>%
+  select(all_of(vars_for_arules)) %>%
+  mutate(across(everything(), ~ as.factor(.)))
+```
+
+```{r}
+# Step 4: Convert data to "transactions" format
+trans <- as(trans_data, "transactions")
+```
+
+```{r}
+# Optional: inspect a few transactions
+inspect(trans[1:5])
+```
+
+```{r}
+# Step 5: Run the Apriori algorithm
+rules <- apriori(trans, parameter = list(support = 0.05, confidence = 0.6))
+```
+
+```{r}
+# Step 6: View results
+summary(rules)
+inspect(head(rules, n = 10, by = "lift"))
+```
+
+```{r}
+# Optional: Plot top rules (need arulesViz)
+# install.packages("arulesViz") if not already installed
+library(arulesViz)
+plot(rules, method = "graph", engine = "htmlwidget")
+
+
+```
+
+```{r}
+library(htmlwidgets)
+saveWidget(plot(rules, method = "graph", engine = "htmlwidget"), "apriori_plot.html")
+
+
+```
