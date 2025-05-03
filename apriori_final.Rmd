@@ -1,0 +1,37 @@
+---
+title: "EAS 509 Presentation"
+author: "Dulanjala Anuradha"
+date: "2025-04-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(arules)
+library(arulesViz)
+library(readr)
+
+# Load & Preprocess
+diabetic_data <- read_csv("diabetic_data.csv")
+ids_mapping <- read_csv("IDS_mapping.csv")
+# Map codes to labels
+mapping_list <- split(ids_mapping, ids_mapping$variable)
+for (var in names(mapping_list)) {
+  map_df <- mapping_list[[var]]
+  diabetic_data[[var]] <- as.character(diabetic_data[[var]])
+  diabetic_data[[var]] <- setNames(map_df$description, map_df$code)[diabetic_data[[var]]]
+}
+
+# Transform & Mine Rules
+diabetic_data[] <- lapply(diabetic_data, as.factor)
+trans <- as(diabetic_data, "transactions")
+rules <- apriori(trans, parameter = list(supp = 0.05, conf = 0.6))
+rules_lift <- sort(rules, by = "lift", decreasing = TRUE)
+
+# Visualize
+plot(rules_lift, method = "graph", engine = "htmlwidget")
+
+```

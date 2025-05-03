@@ -1,6 +1,6 @@
 ---
 title: "EAS 509 Presentation"
-author: "Dulanjala Anuradha"
+author: "Dulanjala Anuradha Jayathilake"
 date: "2025-04-29"
 output:
   html_document:
@@ -11,7 +11,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-https://archive.ics.uci.edu/dataset/296/diabetes+130-us+hospitals+for+years+1999-2008
+https://archive.ics.uci.edu/dataset/296/diabetes+130-us+hospitals+for+years+1999-2008thi
 
 ```{r}
 # Load required packages
